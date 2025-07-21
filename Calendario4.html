@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario Rango de Fechas</title>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+        }
+        .calendar-container {
+            display: flex;
+            gap: 50px;
+        }
+        .calendar {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        #calendar1 {
+            background-color: #ff5d64; /* Color para el calendario izquierdo */
+        }
+        #calendar2 {
+            background-color: #4545fc; /* Color para el calendario derecho */
+        }
+        .ui-datepicker {
+            font-size: 16px;
+        }
+        .ui-datepicker-calendar td {
+            color: white; /* Cambiar el color del texto a blanco */
+            background-color: white; /* Fondo blanco por defecto */
+        }
+        /* Celdas con días */
+        .ui-datepicker-calendar td:not(.ui-datepicker-unselectable) {
+            background-color: rgba(255, 93, 100, 0.5); /* Fondo claro para el calendario izquierdo */
+        }
+        .ui-datepicker-calendar td:nth-child(7) {
+            background-color: rgba(255, 93, 100, 0.5); /* Sábado */
+        }
+        .ui-datepicker-calendar td:nth-child(1) {
+            background-color: rgba(255, 93, 100, 0.5); /* Domingo */
+        }
+        #calendar2 .ui-datepicker-calendar td {
+            background-color: rgba(69, 69, 252, 0.5); /* Fondo claro para el calendario derecho */
+        }
+        #calendar2 .ui-datepicker-calendar td:nth-child(7) {
+            background-color: rgba(69, 69, 252, 0.5); /* Sábado */
+        }
+        #calendar2 .ui-datepicker-calendar td:nth-child(1) {
+            background-color: rgba(69, 69, 252, 0.5); /* Domingo */
+        }
+        .selected {
+            background-color: #007bff; /* Color de selección */
+            color: white;
+        }
+        /* Celdas vacías en blanco para ambos calendarios */
+        #calendar1 .ui-datepicker-calendar td:empty,
+        #calendar2 .ui-datepicker-calendar td:empty {
+            background-color: white; /* Color blanco para celdas vacías en ambos calendarios */
+            color: transparent; /* Ocultar el texto */
+        }
+        #submitButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #message {
+            margin-top: 10px;
+            color: green; /* Color del mensaje */
+        }
+    </style>
+</head>
+<body>
+    <div class="calendar-container">
+        <div class="calendar" id="calendar1"></div>
+        <div class="calendar" id="calendar2"></div>
+    </div>
+    <button id="submitButton">Guardar Fechas</button>
+    <div id="message"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        let fecha = { start: null, end: null }; // Variable para guardar las fechas
+
+        $(function() {
+            // Inicializar los calendarios
+            $("#calendar1").datepicker({
+                dateFormat: "dd-mm-yy",
+                onSelect: function(dateText) {
+                    const selectedDate = $(this).datepicker("getDate");
+                    fecha.start = selectedDate; // Guardar fecha de inicio
+                    updateCalendars();
+                    $("#calendar2").datepicker("option", "minDate", selectedDate); // Limitar fechas en el calendario derecho
+                }
+            });
+
+            $("#calendar2").datepicker({
+                dateFormat: "dd-mm-yy",
+                onSelect: function(dateText) {
+                    const selectedDate = $(this).datepicker("getDate");
+                    if (fecha.start && selectedDate <= fecha.start) {
+                        alert("La fecha final debe ser posterior a la fecha de inicio.");
+                        return;
+                    }
+                    fecha.end = selectedDate; // Guardar fecha de fin
+                    updateCalendars();
+                }
+            });
+
+            function updateCalendars() {
+                $("#calendar1").datepicker("setDate", fecha.start);
+                $("#calendar2").datepicker("setDate", fecha.end);
+                highlightSelectedDates();
+            }
+
+            function highlightSelectedDates() {
+                $(".ui-datepicker-calendar td").removeClass("selected");
+                if (fecha.start && fecha.end) {
+                    const daysDiff = (fecha.end - fecha.start) / (1000 * 60 * 60 * 24);
+                    if (daysDiff >= 0 && daysDiff <= 31) {
+                        let currentDate = new Date(fecha.start);
+                        while (currentDate <= fecha.end) {
+                            const formattedDate = $.datepicker.formatDate('dd-mm-yy', currentDate);
+                            $(`.ui-datepicker-calendar td[data-date='${formattedDate}']`).addClass("selected");
+                            currentDate.setDate(currentDate.getDate() + 1);
+                        }
+                    }
+                }
+            }
+
+            // Manejar el clic del botón
+            $("#submitButton").click(function() {
+                if (fecha.start && fecha.end) {
+                    // Aquí puedes hacer lo que necesites con las fechas, como enviarlas a un servidor
+                    $("#message").text("Datos enviados: " + 
+                        "Inicio: " + $.datepicker.formatDate('dd-mm-yy', fecha.start) + 
+                        ", Fin: " + $.datepicker.formatDate('dd-mm-yy', fecha.end));
+                } else {
+                    $("#message").text("Por favor, selecciona ambas fechas.");
+                }
+            });
+        });
+    </script>
+</body>
+</html>
